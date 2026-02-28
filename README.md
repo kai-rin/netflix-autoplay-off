@@ -33,7 +33,7 @@ A Chrome extension that disables autoplay preview videos on Netflix.
 
 ### 仕組み
 
-`HTMLVideoElement.prototype.play()` をオーバーライドし、Netflixが動画を再生しようとする呼び出しをインターセプトします。さらに `MutationObserver` で動的に追加される動画要素も監視・停止します。
+`HTMLVideoElement.prototype.play()` をオーバーライドし、Netflixが動画を再生しようとする呼び出しをインターセプトします。さらに `MutationObserver` で動的に追加される動画要素も監視・停止します。`/watch/` ページ（実際の動画視聴ページ）ではブロックを行わないため、通常の視聴には影響しません。
 
 ---
 
@@ -64,7 +64,7 @@ A Chrome extension that disables autoplay preview videos on Netflix.
 
 ### How it works
 
-Overrides `HTMLVideoElement.prototype.play()` to intercept Netflix's video playback calls. A `MutationObserver` also watches for dynamically added video elements and pauses them.
+Overrides `HTMLVideoElement.prototype.play()` to intercept Netflix's video playback calls. A `MutationObserver` also watches for dynamically added video elements and pauses them. Blocking is skipped on `/watch/` pages so that normal video playback is unaffected.
 
 ---
 
