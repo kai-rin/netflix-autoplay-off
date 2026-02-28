@@ -8,6 +8,10 @@ A Chrome extension that disables autoplay preview videos on Netflix.
 
 ## 日本語
 
+### 対応ブラウザ
+
+Chrome / Edge / Opera / Brave / Vivaldi など、Chromium系ブラウザで動作します。
+
 ### 機能
 
 - Netflixトップページのプレビュー動画の自動再生をブロック
@@ -16,14 +20,13 @@ A Chrome extension that disables autoplay preview videos on Netflix.
 
 ### インストール
 
-1. このリポジトリをダウンロードまたはクローン
-   ```
-   git clone https://github.com/kai-rin/netflix-autoplay-off.git
-   ```
+1. このリポジトリをダウンロードする
+   - **ZIPダウンロード（簡単）**: ページ上部の緑色の「Code」ボタン →「Download ZIP」をクリックし、展開する
+   - **git clone**: `git clone https://github.com/kai-rin/netflix-autoplay-off.git`
 2. Chromeで `chrome://extensions` を開く
 3. 右上の「デベロッパーモード」をONにする
 4. 「パッケージ化されていない拡張機能を読み込む」をクリック
-5. ダウンロードしたフォルダを選択
+5. ダウンロード・展開したフォルダを選択
 
 ### 使い方
 
@@ -39,6 +42,10 @@ A Chrome extension that disables autoplay preview videos on Netflix.
 
 ## English
 
+### Supported browsers
+
+Works on Chromium-based browsers: Chrome / Edge / Opera / Brave / Vivaldi, etc.
+
 ### Features
 
 - Blocks autoplay preview videos on the Netflix top page
@@ -47,14 +54,13 @@ A Chrome extension that disables autoplay preview videos on Netflix.
 
 ### Installation
 
-1. Download or clone this repository
-   ```
-   git clone https://github.com/kai-rin/netflix-autoplay-off.git
-   ```
+1. Download this repository
+   - **ZIP download (easy)**: Click the green "Code" button at the top of the page → "Download ZIP", then extract it
+   - **git clone**: `git clone https://github.com/kai-rin/netflix-autoplay-off.git`
 2. Open `chrome://extensions` in Chrome
 3. Enable "Developer mode" in the top right
 4. Click "Load unpacked"
-5. Select the downloaded folder
+5. Select the downloaded/extracted folder
 
 ### Usage
 
