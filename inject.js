@@ -6,6 +6,7 @@
   'use strict';
 
   const originalPlay = HTMLVideoElement.prototype.play;
+  const WATCH_PATH_RE = /^\/watch\//;
 
   // autoplay プロパティのオリジナル descriptor を取得
   const autoplayDesc =
@@ -14,7 +15,7 @@
 
   // /watch/ ページかどうか判定（実際の動画視聴ページではブロックしない）
   function isWatchPage() {
-    return /^\/watch\//.test(window.location.pathname);
+    return WATCH_PATH_RE.test(window.location.pathname);
   }
 
   // ブロック対象かどうか判定
