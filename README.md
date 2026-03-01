@@ -6,9 +6,9 @@ A Chrome extension that disables autoplay preview videos on Netflix.
 
 ## なぜ作ったか / Why
 
-Netflixトップページの自動再生プレビューをずっと煩わしく感じていました。既存の拡張機能も多数ありますが、不要な権限を要求するものや出所が不明瞭なものが多く、安心して使えるものを探す手間のほうが大きかったため、自分で作りました。
+Netflixトップページの自動再生プレビューをずっと煩わしく感じていました。既存の拡張機能も多数ありますが、不要な権限を要求するものや出所が不明瞭なものが多く、安心して使えるものを探す手間のほうが大きかったため、自分で作りました。本拡張は余計な権限の要求や、機能の実現に不要な実装は一切含んでいません。
 
-I've always found Netflix's autoplay previews on the top page annoying. There are plenty of existing extensions, but many request unnecessary permissions or come from unclear sources — and vetting them felt like more effort than just building my own.
+I've always found Netflix's autoplay previews on the top page annoying. There are plenty of existing extensions, but many request unnecessary permissions or come from unclear sources — and vetting them felt like more effort than just building my own. This extension requests no unnecessary permissions and contains no code beyond what is needed to do its job.
 
 ---
 
