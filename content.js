@@ -42,7 +42,9 @@
   // --- リアルタイムトグル反映 ---
   chrome.storage.onChanged.addListener(function (changes, areaName) {
     if (areaName === 'local' && changes.enabled !== undefined) {
-      applyState(changes.enabled.newValue);
+      // キー削除時は newValue が undefined → デフォルト（有効）に揃える
+      var newValue = changes.enabled.newValue;
+      applyState(newValue !== undefined ? newValue : true);
     }
   });
 

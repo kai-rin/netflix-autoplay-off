@@ -16,13 +16,14 @@ I've always found Netflix's autoplay previews on the top page annoying. There ar
 
 ### 対応ブラウザ
 
-Chrome / Edge / Opera / Brave / Vivaldi など、Chromium系ブラウザで動作します。
+Chrome / Edge / Opera / Brave / Vivaldi など、Chromium系ブラウザ（Chrome 111 相当以降）で動作します。
 
 ### 機能
 
 - Netflixトップページのプレビュー動画の自動再生をブロック
 - 拡張アイコンのバッジでON/OFFを表示
-- 右クリックメニューからワンクリックで切り替え
+- 拡張アイコンのクリック、または右クリックメニューでワンクリック切り替え
+- 日本語 / 英語の表示に対応
 
 ### インストール
 
@@ -37,12 +38,20 @@ Chrome / Edge / Opera / Brave / Vivaldi など、Chromium系ブラウザで動�
 ### 使い方
 
 - インストール後、Netflixを開くと自動的にプレビュー動画がブロックされます
-- 拡張アイコンを右クリック →「自動再生をブロック」のチェックでON/OFFを切り替え
+- 拡張アイコンをクリックするとON/OFFが切り替わります（右クリック →「自動再生をブロック」でも可）
 - ON（緑バッジ）: ブロック有効 / OFF（灰バッジ）: ブロック無効
 
 ### 仕組み
 
 `HTMLVideoElement.prototype.play()` をオーバーライドし、Netflixが動画を再生しようとする呼び出しをインターセプトします。さらに `MutationObserver` で動的に追加される動画要素も監視・停止します。`/watch/` ページ（実際の動画視聴ページ）ではブロックを行わないため、通常の視聴には影響しません。
+
+### テスト
+
+依存パッケージ不要のE2Eテストを同梱しています（Node 24以降と、Chromium系ブラウザ、netflix.comへのネットワーク接続が必要）。ヘッドレスブラウザに拡張を読み込み、実際のNetflixページ上でブロック動作・トグル・バッジ表示を検証します。
+
+```
+node tests/e2e.mjs
+```
 
 ---
 
@@ -50,13 +59,14 @@ Chrome / Edge / Opera / Brave / Vivaldi など、Chromium系ブラウザで動�
 
 ### Supported browsers
 
-Works on Chromium-based browsers: Chrome / Edge / Opera / Brave / Vivaldi, etc.
+Works on Chromium-based browsers: Chrome / Edge / Opera / Brave / Vivaldi, etc. (Chrome 111 equivalent or later).
 
 ### Features
 
 - Blocks autoplay preview videos on the Netflix top page
 - Shows ON/OFF status via extension badge
-- Toggle with one click from the context menu
+- Toggle by clicking the extension icon, or from the context menu
+- Localized UI (Japanese / English)
 
 ### Installation
 
@@ -71,12 +81,20 @@ Works on Chromium-based browsers: Chrome / Edge / Opera / Brave / Vivaldi, etc.
 ### Usage
 
 - After installation, preview videos on Netflix are automatically blocked
-- Right-click the extension icon → toggle "自動再生をブロック" (Block autoplay)
+- Click the extension icon to toggle ON/OFF (or right-click → "Block autoplay")
 - ON (green badge): blocking enabled / OFF (gray badge): blocking disabled
 
 ### How it works
 
 Overrides `HTMLVideoElement.prototype.play()` to intercept Netflix's video playback calls. A `MutationObserver` also watches for dynamically added video elements and pauses them. Blocking is skipped on `/watch/` pages so that normal video playback is unaffected.
+
+### Testing
+
+A dependency-free E2E test is included (requires Node 24+, a Chromium-based browser, and network access to netflix.com). It loads the extension into a headless browser and verifies blocking, toggling, and the badge on the real Netflix page.
+
+```
+node tests/e2e.mjs
+```
 
 ---
 
