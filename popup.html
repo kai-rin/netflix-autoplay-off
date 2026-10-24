@@ -7,6 +7,18 @@
 <body>
   <h1>Netflix Autoplay Off</h1>
 
+  <div class="pip-actions">
+    <button type="button" class="pip-main" data-pip="native" autofocus>
+      <span data-i18n="pipNative"></span>
+      <kbd>Alt+P</kbd>
+    </button>
+    <button type="button" class="pip-sub" data-pip="document">
+      <span data-i18n="pipDocument"></span>
+      <kbd>Alt+Shift+P</kbd>
+    </button>
+    <p class="hint" id="pip-status" data-i18n="pipOnlyWatch" hidden></p>
+  </div>
+
   <label class="row">
     <input type="checkbox" data-key="enabled">
     <span data-i18n="popupBlock"></span>

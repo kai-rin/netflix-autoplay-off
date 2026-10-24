@@ -544,13 +544,31 @@ async function watchPageE2E(cdp, swSession, pollEval) {
     await pollEval(page, `window.__seeks.length === 1 && window.__seeks[0] >= 10000`, true, 2000));
   await cdp.eval(page, `window.__seeks = []`);
 
-  // -- Document Picture-in-Picture -----------------------------------------
-  // Alt+P via CDP is a trusted key press, which grants the user activation
-  // that documentPictureInPicture.requestWindow() requires.
-  const PIP_DOC = `documentPictureInPicture.window.document`;
+  // Alt+P toggles native PiP on the player's video. The WAV main video has no
+  // video track, so v2 is swapped into the player for this check.
+  await cdp.eval(page, `(() => { const v2 = document.getElementById('v2'); v2.width = 1920; v2.height = 1080;
+    document.querySelector('[data-uia="player"]').append(v2); return true; })()`);
   await pressKey(cdp, page, keyEvent('p', 'KeyP', 80, 1));
+  check('native pip: Alt+P opens browser PiP on the player video',
+    await pollEval(page, `document.pictureInPictureElement?.id`, 'v2', 3000));
+  await pressKey(cdp, page, keyEvent('p', 'KeyP', 80, 1));
+  check('native pip: Alt+P again closes it', await pollEval(page, `document.pictureInPictureElement`, null, 3000));
+  // the popup's PiP button injects this event with a user gesture
+  await cdp.send('Runtime.evaluate', {
+    expression: `document.dispatchEvent(new CustomEvent('nao-pip-request', { detail: 'native' }))`, userGesture: true
+  }, page);
+  check('native pip: popup request opens browser PiP',
+    await pollEval(page, `document.pictureInPictureElement?.id`, 'v2', 3000));
+  await cdp.eval(page, `document.exitPictureInPicture().then(() => true)`);
+  await cdp.eval(page, `(() => { const v2 = document.getElementById('v2'); v2.width = 16; v2.height = 9; document.body.append(v2); return true; })()`);
+
+  // -- Document Picture-in-Picture -----------------------------------------
+  // Alt+Shift+P via CDP is a trusted key press, which grants the user
+  // activation that documentPictureInPicture.requestWindow() requires.
+  const PIP_DOC = `documentPictureInPicture.window.document`;
+  await pressKey(cdp, page, keyEvent('P', 'KeyP', 80, 1 | 8));
   const opened = await pollEval(page, `!!documentPictureInPicture.window`, true, 5000);
-  check('pip: Alt+P opens a Document PiP window', opened);
+  check('pip: Alt+Shift+P opens a Document PiP window', opened);
   if (!opened) return;
 
   check('pip: video moved out of the page', await pollEval(page, `document.querySelector('[data-uia="player"] video')`, null, 2000));
@@ -589,6 +607,8 @@ async function popupE2E(cdp, swSession, pollEval) {
     await pollEval(popup, `document.querySelectorAll('input[type=checkbox]').length`, 4, 5000));
   check('popup: labels are localized',
     await cdp.eval(popup, `[...document.querySelectorAll('[data-i18n]')].every((n) => n.textContent.trim() !== '')`) === true);
+  check('popup: PiP buttons are disabled outside the Netflix player',
+    await pollEval(popup, `[...document.querySelectorAll('[data-pip]')].every((b) => b.disabled) && !document.getElementById('pip-status').hidden`, true, 3000));
   check('popup: reflects stored state',
     await pollEval(popup, `document.querySelector('[data-key=enabled]').checked`, true, 3000));
 

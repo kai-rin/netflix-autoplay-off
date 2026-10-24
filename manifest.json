@@ -16,7 +16,9 @@
     "default_popup": "popup.html"
   },
   "permissions": [
+    "activeTab",
     "contextMenus",
+    "scripting",
     "storage"
   ],
   "background": {

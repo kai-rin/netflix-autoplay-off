@@ -40,14 +40,14 @@
     noPip: 'この環境では PiP を開けません', noVideo: '動画が見つかりません',
     play: '再生 / 一時停止 (Space)', back: '10秒戻る (←)', forward: '10秒進む (→)',
     mute: 'ミュート (M)', volume: '音量 (↑↓)', rate: '再生速度 ([ ])', fit: '黒帯を詰める (C)',
-    close: 'タブに戻す (Alt+P)', nextTitle: '次のエピソード (N)'
+    close: 'タブに戻す (Alt+Shift+P)', nextTitle: '次のエピソード (N)'
   } : {
     speed: 'Speed', next: 'Next episode', noNext: 'No next episode found',
     skipped: 'Skipped', continued: 'Continuing playback', stoppedNext: 'Auto next episode stopped',
     noPip: 'Picture-in-Picture is not available', noVideo: 'No video found',
     play: 'Play / Pause (Space)', back: 'Back 10s (←)', forward: 'Forward 10s (→)',
     mute: 'Mute (M)', volume: 'Volume (↑↓)', rate: 'Speed ([ ])', fit: 'Fit to video (C)',
-    close: 'Back to tab (Alt+P)', nextTitle: 'Next episode (N)'
+    close: 'Back to tab (Alt+Shift+P)', nextTitle: 'Next episode (N)'
   };
 
   // 開いている PiP の状態（閉じている間は null）
@@ -207,6 +207,24 @@
     });
   }
 
+  async function toggleNativePip() {
+    if (document.pictureInPictureElement) {
+      await document.exitPictureInPicture().catch(() => {});
+      return;
+    }
+    const video = currentVideo();
+    if (!video) {
+      toast(document, T.noVideo);
+      return;
+    }
+    video.disablePictureInPicture = false;
+    try {
+      await video.requestPictureInPicture();
+    } catch (e) {
+      toast(document, T.noPip);
+    }
+  }
+
   // 標準 PiP の小窓に 10 秒送り戻し・次のエピソードのボタンを出す
   // Netflix が後から上書きすることがあるため、定期的に登録し直す
   function setMediaSessionHandlers() {
@@ -284,8 +302,10 @@
   // 処理したキーなら true（Netflix 側の同じキー処理を止める）
   function handleKey(event, inPip) {
     if (!isWatchPage() || isTyping(event)) return false;
+    // Alt+P: ブラウザ標準の PiP、Alt+Shift+P: 字幕・操作バー付きの Document PiP
     if (event.altKey && event.code === 'KeyP') {
-      togglePip();
+      if (event.shiftKey) togglePip();
+      else if (!inPip) toggleNativePip();
       return true;
     }
     if (event.altKey || event.ctrlKey || event.metaKey) return false;
@@ -321,6 +341,13 @@
   }
 
   window.addEventListener('keydown', (event) => onKeyDown(event, false), true);
+
+  // ポップアップの PiP ボタン（popup.js が scripting.executeScript で送る）
+  document.addEventListener('nao-pip-request', (event) => {
+    if (!isWatchPage()) return;
+    if (event.detail === 'document') togglePip();
+    else toggleNativePip();
+  });
 
   // --- Document Picture-in-Picture ---
 

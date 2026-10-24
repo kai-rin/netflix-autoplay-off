@@ -5,6 +5,15 @@
   "menuToggle": {
     "message": "自動再生をブロック"
   },
+  "pipNative": {
+    "message": "PiP で見る"
+  },
+  "pipDocument": {
+    "message": "字幕付きの小窓で見る"
+  },
+  "pipOnlyWatch": {
+    "message": "Netflix の再生画面で使えます"
+  },
   "popupBlock": {
     "message": "トップページの自動再生プレビューを止める"
   },
@@ -36,7 +45,7 @@
     "message": "PiP（小窓）"
   },
   "popupPipHelp": {
-    "message": "再生画面で Alt+P を押すと、字幕と操作バー付きの小窓で開きます。もう一度 Alt+P で元に戻ります。字幕が要らなければ、ブラウザ標準の PiP ボタンでも開けます（10秒送り戻し・次のエピソードに対応）。"
+    "message": "再生画面で Alt+P を押すとブラウザ標準の PiP（字幕なし、10秒送り戻し・次のエピソードに対応）、Alt+Shift+P を押すと字幕と操作バー付きの小窓で開きます。同じキーをもう一度押すと元に戻ります。"
   },
   "popupPipKeys": {
     "message": "小窓の中: Space 再生/停止　←/→ 10秒　↑/↓ 音量　M ミュート　C 黒帯を詰める　[ ] 速度　N 次のエピソード"

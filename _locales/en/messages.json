@@ -5,6 +5,15 @@
   "menuToggle": {
     "message": "Block autoplay"
   },
+  "pipNative": {
+    "message": "Picture-in-Picture"
+  },
+  "pipDocument": {
+    "message": "Floating window with subtitles"
+  },
+  "pipOnlyWatch": {
+    "message": "Available on the Netflix player"
+  },
   "popupBlock": {
     "message": "Stop autoplay previews on the browse page"
   },
@@ -36,7 +45,7 @@
     "message": "Picture-in-Picture"
   },
   "popupPipHelp": {
-    "message": "Press Alt+P on the player to open a floating window with subtitles and controls. Press Alt+P again to return. Without subtitles, the browser's own PiP button also works (with ±10s and next episode)."
+    "message": "On the player, Alt+P opens the browser's own PiP (no subtitles; ±10s and next episode), and Alt+Shift+P opens a floating window with subtitles and controls. Press the same keys again to return."
   },
   "popupPipKeys": {
     "message": "In the window: Space play/pause   ←/→ 10s   ↑/↓ volume   M mute   C fit to video   [ ] speed   N next episode"

@@ -58,6 +58,53 @@ select {
   padding: 2px 4px;
 }
 
+.pip-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 10px;
+}
+
+.pip-actions button {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  border: 0;
+  border-radius: 8px;
+  font: inherit;
+  cursor: pointer;
+}
+
+.pip-main {
+  padding: 12px 14px;
+  background: var(--accent);
+  color: #fff;
+  font-size: 15px !important;
+  font-weight: 700 !important;
+}
+
+.pip-sub {
+  padding: 8px 14px;
+  background: color-mix(in srgb, var(--fg) 10%, transparent);
+  color: var(--fg);
+}
+
+.pip-actions button:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+
+.pip-actions button:focus-visible {
+  outline: 2px solid var(--fg);
+  outline-offset: 2px;
+}
+
+kbd {
+  font: 11px/1 system-ui, sans-serif;
+  opacity: 0.8;
+}
+
 .hint {
   margin: 2px 0 0;
   color: var(--muted);

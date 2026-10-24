@@ -55,7 +55,8 @@ calls, or dependencies without the owner's explicit request.
   re-registered every tick because Netflix may overwrite them. Native PiP
   cannot show subtitles (DOM overlay; DRM frames can't be drawn to a canvas),
   hence the Document PiP as well.
-- Document PiP is opened only from an in-page `Alt+P` keydown: `requestWindow()` needs
+- Keys: `Alt+P` toggles native PiP, `Alt+Shift+P` toggles Document PiP.
+- Document PiP is opened only from an in-page `Alt+Shift+P` keydown: `requestWindow()` needs
   user activation in the page, which a popup click or extension command does
   not provide.
 - Auto-pressed buttons are remembered in a WeakSet so a lingering countdown

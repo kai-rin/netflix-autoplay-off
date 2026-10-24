@@ -21,7 +21,7 @@ Chrome / Edge / Opera / Brave / Vivaldi など、Chromium系ブラウザ（Chrom
 ### 機能
 
 - Netflixトップページのプレビュー動画の自動再生をブロック（バッジでON/OFFを表示）
-- **PiP（小窓）**: 再生画面で `Alt+P`。字幕・操作バー（再生/停止、10秒送り戻し、シークバー、音量、再生速度、次のエピソード）付きの小窓で再生。小窓の大きさを覚える。字幕が要らなければブラウザ標準の PiP ボタンも使える（Netflix が付けている PiP 禁止を外す。小窓で10秒送り戻し・次のエピソードが使える）
+- **PiP（小窓）**: 再生画面で `Alt+Shift+P`。字幕・操作バー（再生/停止、10秒送り戻し、シークバー、音量、再生速度、次のエピソード）付きの小窓で再生。小窓の大きさを覚える。字幕が要らなければ `Alt+P` でブラウザ標準の PiP（Netflix が付けている PiP 禁止を外すので、ブラウザのタブの右クリック等からも開ける。小窓で10秒送り戻し・次のエピソードが使える）
 - **イントロ・前回のあらすじを自動スキップ**
 - **「視聴を続けますか？」を自動で閉じる**
 - **エピソードの終わり**: Netflix の標準どおり／エンドクレジットですぐ次へ／次へ自動で進まない
@@ -44,7 +44,7 @@ Chrome / Edge / Opera / Brave / Vivaldi など、Chromium系ブラウザ（Chrom
 - インストール後、Netflixを開くと自動的にプレビュー動画がブロックされます
 - 拡張アイコンをクリックすると設定のポップアップが開きます（自動再生ブロックは右クリック →「自動再生をブロック」でも切り替え可）
 - ON（緑バッジ）: ブロック有効 / OFF（灰バッジ）: ブロック無効
-- 再生画面で `Alt+P` を押すと小窓で開き、もう一度 `Alt+P` で元に戻ります
+- 再生画面で `Alt+P` を押すとブラウザ標準の PiP、`Alt+Shift+P` を押すと字幕付きの小窓で開き、同じキーをもう一度押すと元に戻ります
 - 小窓の中のキー: `Space` 再生/停止、`←` `→` 10秒、`↑` `↓` 音量、`M` ミュート、`C` 黒帯を詰める、`[` `]` 速度、`N` 次のエピソード
 
 ### 仕組み
@@ -72,7 +72,7 @@ Works on Chromium-based browsers: Chrome / Edge / Opera / Brave / Vivaldi, etc. 
 ### Features
 
 - Blocks autoplay preview videos on the Netflix top page (ON/OFF shown on the badge)
-- **Picture-in-Picture**: press `Alt+P` on the player. A floating window with subtitles and controls (play/pause, ±10s, seek bar, volume, speed, next episode) that remembers its size. Without subtitles, the browser's own PiP button also works (Netflix's PiP block is removed; ±10s and next episode in the PiP window)
+- **Picture-in-Picture**: press `Alt+Shift+P` on the player. A floating window with subtitles and controls (play/pause, ±10s, seek bar, volume, speed, next episode) that remembers its size. Without subtitles, `Alt+P` opens the browser's own PiP (Netflix's PiP block is removed, so the browser's tab context menu etc. also work; ±10s and next episode in the PiP window)
 - **Auto skip intros and recaps**
 - **Auto dismiss "Are you still watching?"**
 - **At the end of an episode**: Netflix default / go to the next episode as soon as credits start / don't continue
@@ -95,7 +95,7 @@ Works on Chromium-based browsers: Chrome / Edge / Opera / Brave / Vivaldi, etc. 
 - After installation, preview videos on Netflix are automatically blocked
 - Click the extension icon to open the settings popup (autoplay blocking can also be toggled via right-click → "Block autoplay")
 - ON (green badge): blocking enabled / OFF (gray badge): blocking disabled
-- Press `Alt+P` on the player to open the floating window, and `Alt+P` again to return
+- On the player, `Alt+P` opens the browser's own PiP and `Alt+Shift+P` opens the floating window with subtitles; press the same keys again to return
 - Keys in the window: `Space` play/pause, `←` `→` 10s, `↑` `↓` volume, `M` mute, `C` fit to video, `[` `]` speed, `N` next episode
 
 ### How it works
