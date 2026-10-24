@@ -48,6 +48,7 @@ async function staticChecks() {
 
   const scripts = [
     manifest.background?.service_worker,
+    manifest.action?.default_popup,
     ...(manifest.content_scripts ?? []).flatMap((cs) => cs.js ?? []),
     ...Object.values(manifest.icons ?? {})
   ].filter(Boolean);
@@ -61,11 +62,13 @@ async function staticChecks() {
     !mainWorld || parseInt(manifest.minimum_chrome_version, 10) >= 111
   );
 
-  // keys referenced from the manifest (__MSG_key__) plus keys used via
-  // chrome.i18n.getMessage in background.js — all must exist in every locale
+  // keys referenced from the manifest (__MSG_key__), via chrome.i18n.getMessage
+  // in background.js, and via data-i18n in popup.html — all must exist in every locale
+  const popupHtml = await readFile(join(ROOT, 'popup.html'), 'utf8');
   const msgKeys = [...new Set([
     ...[...JSON.stringify(manifest).matchAll(/__MSG_(\w+)__/g)].map((m) => m[1]),
-    'menuToggle'
+    'menuToggle',
+    ...[...popupHtml.matchAll(/data-i18n="(\w+)"/g)].map((m) => m[1])
   ])];
   check('default_locale is set when __MSG__ used', msgKeys.length === 0 || !!manifest.default_locale);
   for (const locale of readdirSync(join(ROOT, '_locales'))) {
@@ -94,14 +97,23 @@ class CDP {
     this.ws = ws;
     this.nextId = 1;
     this.pending = new Map();
+    this.handlers = new Map();
     ws.addEventListener('message', (ev) => {
       const msg = JSON.parse(ev.data);
+      if (msg.method && this.handlers.has(msg.method)) {
+        for (const fn of this.handlers.get(msg.method)) fn(msg.params, msg.sessionId);
+      }
       if (msg.id && this.pending.has(msg.id)) {
         const { res, rej } = this.pending.get(msg.id);
         this.pending.delete(msg.id);
         msg.error ? rej(new Error(`${msg.error.message} (${msg.error.data ?? ''})`)) : res(msg.result);
       }
     });
+  }
+
+  on(method, fn) {
+    if (!this.handlers.has(method)) this.handlers.set(method, []);
+    this.handlers.get(method).push(fn);
   }
 
   send(method, params = {}, sessionId) {
@@ -352,10 +364,208 @@ async function e2e() {
 
     probe = await cdp.eval(page, PLAY_PROBE);
     check('re-enabled: play() is stubbed again', probe.outcome === 'resolved', JSON.stringify(probe));
+
+    await watchPageE2E(cdp, swSession, pollEval);
+    await popupE2E(cdp, swSession, pollEval);
   } finally {
     await kill(cdp);
     cdp.close();
   }
+}
+
+// ---------------------------------------------------------------------------
+// /watch/ page features (mock player)
+// ---------------------------------------------------------------------------
+//
+// Real /watch/ pages need a logged-in account and DRM playback, so the test
+// intercepts https://www.netflix.com/watch/* via CDP Fetch and serves a mock
+// player that mimics the Netflix DOM (data-uia buttons, .player-timedtext) and
+// the player API used for seeking. The content scripts still inject because
+// the URL matches. This verifies the extension's logic, not Netflix's current
+// markup — that needs a manual check on the real site.
+
+const WATCH_URL = 'https://www.netflix.com/watch/80000001';
+
+const MOCK_WATCH_HTML = `<!doctype html>
+<html><head><title>Mock watch</title></head>
+<body style="margin:0;background:#000">
+<div data-uia="player" class="watch-video" style="position:relative;width:960px;height:540px">
+  <div id="video-home"><video id="v" muted width="960" height="540"></video></div>
+  <div class="player-timedtext" style="position:absolute;inset:0">
+    <div class="player-timedtext-text-container" style="position:absolute;left:300px;top:400px">
+      <span id="cue">Hello<br>World</span>
+    </div>
+  </div>
+</div>
+<script>
+  // 60 s of silent WAV: a finite, seekable media whose playbackRate can change
+  // (a MediaStream source would pin playbackRate to 1)
+  function silentWav(seconds) {
+    const rate = 8000, n = rate * seconds, buf = new ArrayBuffer(44 + n), d = new DataView(buf);
+    const tag = (o, s) => [...s].forEach((c, i) => d.setUint8(o + i, c.charCodeAt(0)));
+    tag(0, 'RIFF'); d.setUint32(4, 36 + n, true); tag(8, 'WAVE'); tag(12, 'fmt ');
+    d.setUint32(16, 16, true); d.setUint16(20, 1, true); d.setUint16(22, 1, true);
+    d.setUint32(24, rate, true); d.setUint32(28, rate, true); d.setUint16(32, 1, true); d.setUint16(34, 8, true);
+    tag(36, 'data'); d.setUint32(40, n, true); new Uint8Array(buf, 44).fill(128);
+    return URL.createObjectURL(new Blob([buf], { type: 'audio/wav' }));
+  }
+  const v = document.getElementById('v');
+  v.src = silentWav(60);
+  v.play().catch(() => {});
+  window.__seeks = [];
+  window.__clicks = [];
+  const player = { seek: (ms) => window.__seeks.push(ms), play: () => v.play(), pause: () => v.pause() };
+  window.netflix = { appContext: { state: { playerApp: { getAPI: () => ({ videoPlayer: {
+    getAllPlayerSessionIds: () => ['s1'], getVideoPlayerBySessionId: () => player } }) } } } };
+  window.addButton = (uia) => {
+    const b = document.createElement('button');
+    b.dataset.uia = uia;
+    b.textContent = uia;
+    b.addEventListener('click', () => window.__clicks.push(uia));
+    document.querySelector('[data-uia="player"]').append(b);
+    return true;
+  };
+</script>
+</body></html>`;
+
+function keyEvent(key, code, keyCode, modifiers = 0) {
+  return { key, code, windowsVirtualKeyCode: keyCode, nativeVirtualKeyCode: keyCode, modifiers };
+}
+
+async function pressKey(cdp, session, ev) {
+  await cdp.send('Input.dispatchKeyEvent', { type: 'rawKeyDown', ...ev }, session);
+  await cdp.send('Input.dispatchKeyEvent', { type: 'keyUp', ...ev }, session);
+}
+
+const clicksOf = (uia) => `window.__clicks.filter((c) => c === '${uia}').length`;
+
+async function watchPageE2E(cdp, swSession, pollEval) {
+  console.log(`[e2e] opening mock ${WATCH_URL}`);
+  const { targetId } = await cdp.send('Target.createTarget', { url: 'about:blank' });
+  const { sessionId: page } = await cdp.send('Target.attachToTarget', { targetId, flatten: true });
+  cdp.on('Fetch.requestPaused', (params, sessionId) => {
+    if (sessionId !== page) return;
+    cdp.send('Fetch.fulfillRequest', {
+      requestId: params.requestId,
+      responseCode: 200,
+      responseHeaders: [{ name: 'Content-Type', value: 'text/html; charset=utf-8' }],
+      body: Buffer.from(MOCK_WATCH_HTML).toString('base64')
+    }, page).catch(() => {});
+  });
+  await cdp.send('Fetch.enable', { patterns: [{ urlPattern: 'https://www.netflix.com/watch/*' }] }, page);
+  await cdp.send('Page.navigate', { url: WATCH_URL }, page);
+  await cdp.send('Page.bringToFront', {}, page);
+
+  check('watch: mock player loaded with settings bridged',
+    await pollEval(page, `!!window.addButton && document.documentElement.dataset.naoSkipIntro === 'on'`, true, 20000));
+
+  // -- auto skip / still watching -----------------------------------------
+  await cdp.eval(page, `addButton('player-skip-intro')`);
+  check('watch: skip intro is pressed', await pollEval(page, `${clicksOf('player-skip-intro')} >= 1`, true, 3000));
+  await sleep(1000);
+  check('watch: skip intro is pressed only once', await cdp.eval(page, clicksOf('player-skip-intro')) === 1);
+  check('watch: toast is shown', await cdp.eval(page, `!!document.getElementById('nao-toast')`) === true);
+
+  await cdp.eval(page, `addButton('interrupt-autoplay-continue')`);
+  check('watch: "still watching" is dismissed',
+    await pollEval(page, `${clicksOf('interrupt-autoplay-continue')} >= 1`, true, 3000));
+
+  await cdp.eval(swSession, `chrome.storage.local.set({ skipIntro: false })`);
+  await pollEval(page, `document.documentElement.dataset.naoSkipIntro`, 'off', 5000);
+  await cdp.eval(page, `addButton('player-skip-recap')`);
+  await sleep(1200);
+  check('watch: skip disabled -> recap is not pressed', await cdp.eval(page, clicksOf('player-skip-recap')) === 0);
+  await cdp.eval(swSession, `chrome.storage.local.set({ skipIntro: true })`);
+  check('watch: skip re-enabled -> recap is pressed',
+    await pollEval(page, `${clicksOf('player-skip-recap')} >= 1`, true, 5000));
+
+  // -- next episode modes ---------------------------------------------------
+  await cdp.eval(page, `addButton('next-episode-seamless-button')`);
+  await sleep(1200);
+  check('next: "netflix" mode leaves the countdown alone',
+    await cdp.eval(page, clicksOf('next-episode-seamless-button')) === 0);
+  await cdp.eval(swSession, `chrome.storage.local.set({ nextEpisode: 'immediate' })`);
+  check('next: "immediate" mode presses next episode',
+    await pollEval(page, `${clicksOf('next-episode-seamless-button')} >= 1`, true, 5000));
+  await cdp.eval(swSession, `chrome.storage.local.set({ nextEpisode: 'stop' })`);
+  await cdp.eval(page, `addButton('watch-credits-seamless-button')`);
+  check('next: "stop" mode presses watch credits',
+    await pollEval(page, `${clicksOf('watch-credits-seamless-button')} >= 1`, true, 5000));
+  await cdp.eval(swSession, `chrome.storage.local.remove('nextEpisode')`);
+  await pollEval(page, `document.documentElement.dataset.naoNext`, 'netflix', 5000);
+
+  // -- shortcuts ------------------------------------------------------------
+  const RATE = `document.querySelector('video').playbackRate`;
+  await pressKey(cdp, page, keyEvent(']', 'BracketRight', 221));
+  check('keys: ] speeds up to 1.25x', await pollEval(page, RATE, 1.25, 2000));
+  await pressKey(cdp, page, keyEvent(']', 'BracketRight', 221));
+  await pressKey(cdp, page, keyEvent('[', 'BracketLeft', 219));
+  check('keys: [ slows down', await pollEval(page, RATE, 1.25, 2000));
+  await pressKey(cdp, page, keyEvent('\\', 'Backslash', 220));
+  check('keys: \\ resets to 1x', await pollEval(page, RATE, 1, 2000));
+  await cdp.eval(swSession, `chrome.storage.local.set({ shortcuts: false })`);
+  await pollEval(page, `document.documentElement.dataset.naoKeys`, 'off', 5000);
+  await pressKey(cdp, page, keyEvent(']', 'BracketRight', 221));
+  await sleep(300);
+  check('keys: disabled -> ] does nothing', await cdp.eval(page, RATE) === 1);
+  await cdp.eval(swSession, `chrome.storage.local.remove('shortcuts')`);
+  await pollEval(page, `document.documentElement.dataset.naoKeys`, 'on', 5000);
+
+  // -- Document Picture-in-Picture -----------------------------------------
+  // Alt+P via CDP is a trusted key press, which grants the user activation
+  // that documentPictureInPicture.requestWindow() requires.
+  const PIP_DOC = `documentPictureInPicture.window.document`;
+  await pressKey(cdp, page, keyEvent('p', 'KeyP', 80, 1));
+  const opened = await pollEval(page, `!!documentPictureInPicture.window`, true, 5000);
+  check('pip: Alt+P opens a Document PiP window', opened);
+  if (!opened) return;
+
+  check('pip: video moved out of the page', await pollEval(page, `document.querySelectorAll('video').length`, 0, 2000));
+  check('pip: video is inside the PiP window', await pollEval(page, `${PIP_DOC}.querySelector('video')?.id`, 'v', 2000));
+  check('pip: subtitles are mirrored',
+    await pollEval(page, `${PIP_DOC}.querySelector('.nao-caption').textContent.replace(/\\s+/g, ' ').trim()`, 'Hello World', 3000));
+  await cdp.eval(page, `document.getElementById('cue').textContent = 'Second cue'`);
+  check('pip: subtitle changes follow',
+    await pollEval(page, `${PIP_DOC}.querySelector('.nao-caption').textContent.trim()`, 'Second cue', 3000));
+  check('pip: control bar has buttons',
+    await cdp.eval(page, `${PIP_DOC}.querySelectorAll('.nao-bar button').length >= 7`) === true);
+
+  await cdp.eval(page, `documentPictureInPicture.window.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowRight', bubbles: true }))`);
+  check('pip: → seeks forward through the player API',
+    await pollEval(page, `window.__seeks.length === 1 && window.__seeks[0] >= 10000`, true, 2000));
+  await cdp.eval(page, `documentPictureInPicture.window.dispatchEvent(new KeyboardEvent('keydown', { key: ']', bubbles: true }))`);
+  check('pip: ] changes speed inside the window', await pollEval(page, `${PIP_DOC}.querySelector('video').playbackRate`, 1.25, 2000));
+
+  await cdp.eval(page, `documentPictureInPicture.window.close()`);
+  check('pip: closing restores the video to its original place',
+    await pollEval(page, `document.querySelector('#video-home > video')?.id`, 'v', 3000));
+  check('pip: restored video keeps playing', await pollEval(page, `!document.querySelector('video').paused`, true, 3000));
+}
+
+// ---------------------------------------------------------------------------
+// Popup
+// ---------------------------------------------------------------------------
+
+async function popupE2E(cdp, swSession, pollEval) {
+  const id = await cdp.eval(swSession, 'chrome.runtime.id');
+  console.log('[e2e] opening popup.html');
+  const { targetId } = await cdp.send('Target.createTarget', { url: `chrome-extension://${id}/popup.html` });
+  const { sessionId: popup } = await cdp.send('Target.attachToTarget', { targetId, flatten: true });
+
+  check('popup: settings are rendered',
+    await pollEval(popup, `document.querySelectorAll('input[type=checkbox]').length`, 4, 5000));
+  check('popup: labels are localized',
+    await cdp.eval(popup, `[...document.querySelectorAll('[data-i18n]')].every((n) => n.textContent.trim() !== '')`) === true);
+  check('popup: reflects stored state',
+    await pollEval(popup, `document.querySelector('[data-key=enabled]').checked`, true, 3000));
+
+  await cdp.eval(popup, `document.querySelector('[data-key=skipIntro]').click()`);
+  check('popup: toggling writes to storage',
+    await pollEval(swSession, `chrome.storage.local.get('skipIntro').then((r) => r.skipIntro)`, false, 3000));
+  await cdp.eval(popup, `document.querySelector('[data-key=nextEpisode]').value = 'stop'; document.querySelector('[data-key=nextEpisode]').dispatchEvent(new Event('change'))`);
+  check('popup: select writes to storage',
+    await pollEval(swSession, `chrome.storage.local.get('nextEpisode').then((r) => r.nextEpisode)`, 'stop', 3000));
+  await cdp.eval(swSession, `chrome.storage.local.remove(['skipIntro', 'nextEpisode'])`);
 }
 
 // ---------------------------------------------------------------------------

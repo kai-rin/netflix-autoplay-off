@@ -47,18 +47,6 @@ chrome.runtime.onInstalled.addListener(function () {
   });
 });
 
-// --- アイコン左クリックでトグル ---
-// get→set を直列化し、連打時に両クリックが同じ旧値を読んでトグルが
-// 1回分失われるのを防ぐ
-var toggleQueue = Promise.resolve();
-chrome.action.onClicked.addListener(function () {
-  toggleQueue = toggleQueue.then(function () {
-    return chrome.storage.local.get('enabled').then(function (result) {
-      return chrome.storage.local.set({ enabled: !getEnabled(result) });
-    });
-  });
-});
-
 // --- コンテキストメニュークリック ---
 chrome.contextMenus.onClicked.addListener(function (info) {
   if (info.menuItemId === MENU_ID) {
@@ -72,7 +60,7 @@ chrome.storage.onChanged.addListener(function (changes, areaName) {
     // キー削除時は newValue が undefined → デフォルト（有効）に揃える
     var enabled = getEnabled({ enabled: changes.enabled.newValue });
     updateBadge(enabled);
-    // アイコン左クリック等メニュー外からの変更にチェック状態を追従させる
+    // ポップアップ等メニュー外からの変更にチェック状態を追従させる
     chrome.contextMenus.update(MENU_ID, { checked: enabled }, function () {
       // メニュー未作成のタイミングでは失敗し得るが無害（onInstalled で正しく作られる）
       void chrome.runtime.lastError;

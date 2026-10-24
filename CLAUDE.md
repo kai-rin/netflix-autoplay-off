@@ -2,14 +2,19 @@
 
 Guidance for AI coding agents and contributors working on this repository.
 
-Chrome MV3 extension that blocks Netflix's autoplay previews. Single purpose,
-minimal permissions, no-bloat policy (see README) — do not add features,
-permissions, or dependencies beyond what the stated purpose requires.
+Chrome MV3 extension that blocks Netflix's autoplay previews and adds player
+tools on `/watch/` pages (Document PiP with subtitles and controls, auto skip
+intro/recap, next-episode control, "still watching" dismissal, speed and
+shortcuts). Netflix-only, minimal permissions, no external requests, no
+dependencies (see README) — do not add permissions, host access, network
+calls, or dependencies without the owner's explicit request.
 
 ## Testing
 
 - `node tests/e2e.mjs` — zero-dependency E2E (Node 24+, headless browser + CDP,
-  needs network access to netflix.com)
+  needs network access to netflix.com). `/watch/` features are tested against a
+  mock player served via CDP `Fetch` (real playback needs login + DRM), so
+  Netflix markup changes (data-uia names) are only caught by a manual check.
 - Branded Google Chrome 137+ ignores `--load-extension`; the test auto-falls
   back to Edge / Chromium. Set `CHROME_PATH` to force a specific binary.
 - Run the E2E after any behavior change. New i18n keys must be added to every
@@ -18,7 +23,16 @@ permissions, or dependencies beyond what the stated purpose requires.
 ## Architecture
 
 - `inject.js` (MAIN world) overrides `play()` / `autoplay`; `content.js`
-  (ISOLATED world) bridges `chrome.storage` to `documentElement.dataset.nao`.
+  (ISOLATED world) bridges `chrome.storage` to `documentElement.dataset.nao*`
+  (`nao`, `naoSkipIntro`, `naoStill`, `naoNext`, `naoKeys`, `naoPipSize`).
+- `player.js` (MAIN world) holds all `/watch/` features. It runs in MAIN
+  because seeking must go through `window.netflix...videoPlayer.seek(ms)` —
+  writing `video.currentTime` breaks Netflix playback. PiP window size goes back
+  to `content.js` as a `nao-pip-size` CustomEvent (MAIN world has no
+  `chrome.storage`).
+- Settings defaults are duplicated in `content.js` and `popup.js`; keep them
+  in sync.
+- `minimum_chrome_version` is 116 (Document Picture-in-Picture).
 - `/watch/` pages are excluded by checking `location.pathname` at call time —
   Netflix is an SPA, so never cache the result of that check.
 - `world: "MAIN"` in static content scripts requires Chrome 111+; do not lower
@@ -31,8 +45,16 @@ permissions, or dependencies beyond what the stated purpose requires.
   extension is re-enabled. Do not move creation to service-worker top level.
 - `contextMenus.onClicked` writes `info.checked` (the state the user actually
   saw), not a toggle of the stored value.
-- `chrome.storage` get→set is not serialized by Chrome; keep the promise-chain
-  serialization in the `action.onClicked` handler to avoid lost toggles.
+- The action has a popup, so `action.onClicked` never fires; toggles live in
+  `popup.js` and write the checkbox state directly (no get→set race).
+- PiP moves Netflix's own `<video>` (no capture/re-encode, so DRM and quality
+  are kept) and restores it to its original parent on `pagehide`. Subtitles are
+  mirrored, not moved, so Netflix's own subtitle layout is untouched.
+- PiP is opened only from an in-page `Alt+P` keydown: `requestWindow()` needs
+  user activation in the page, which a popup click or extension command does
+  not provide.
+- Auto-pressed buttons are remembered in a WeakSet so a lingering countdown
+  button is never pressed twice (double next-episode skips).
 
 ## Style
 

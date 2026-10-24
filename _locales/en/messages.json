@@ -1,8 +1,44 @@
 {
   "extDescription": {
-    "message": "Disable autoplay previews on Netflix"
+    "message": "Stop Netflix autoplay previews, and add Picture-in-Picture with subtitles, auto skip intro, speed control and more"
   },
   "menuToggle": {
     "message": "Block autoplay"
+  },
+  "popupBlock": {
+    "message": "Stop autoplay previews on the browse page"
+  },
+  "popupSkipIntro": {
+    "message": "Skip intros and recaps automatically"
+  },
+  "popupStillWatching": {
+    "message": "Dismiss \"Are you still watching?\" automatically"
+  },
+  "popupNextEpisode": {
+    "message": "At the end of an episode"
+  },
+  "nextNetflix": {
+    "message": "Netflix default"
+  },
+  "nextImmediate": {
+    "message": "Go to the next episode as soon as credits start"
+  },
+  "nextStop": {
+    "message": "Don't continue to the next episode"
+  },
+  "popupShortcuts": {
+    "message": "Extra shortcuts on the player"
+  },
+  "popupShortcutsHelp": {
+    "message": "[ / ]: speed −/+0.25 (0.25–3x)   \\: normal speed   N: next episode"
+  },
+  "popupPip": {
+    "message": "Picture-in-Picture"
+  },
+  "popupPipHelp": {
+    "message": "Press Alt+P on the player to open a floating window with subtitles and controls. Press Alt+P again to return."
+  },
+  "popupPipKeys": {
+    "message": "In the window: Space play/pause   ←/→ 10s   ↑/↓ volume   M mute   C fit to video   [ ] speed   N next episode"
   }
 }

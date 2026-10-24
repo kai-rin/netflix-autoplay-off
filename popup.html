@@ -1,0 +1,42 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <h1>Netflix Autoplay Off</h1>
+
+  <label class="row">
+    <input type="checkbox" data-key="enabled">
+    <span data-i18n="popupBlock"></span>
+  </label>
+  <label class="row">
+    <input type="checkbox" data-key="skipIntro">
+    <span data-i18n="popupSkipIntro"></span>
+  </label>
+  <label class="row">
+    <input type="checkbox" data-key="skipStillWatching">
+    <span data-i18n="popupStillWatching"></span>
+  </label>
+  <label class="row stack">
+    <span data-i18n="popupNextEpisode"></span>
+    <select data-key="nextEpisode">
+      <option value="netflix" data-i18n="nextNetflix"></option>
+      <option value="immediate" data-i18n="nextImmediate"></option>
+      <option value="stop" data-i18n="nextStop"></option>
+    </select>
+  </label>
+  <label class="row">
+    <input type="checkbox" data-key="shortcuts">
+    <span data-i18n="popupShortcuts"></span>
+  </label>
+  <p class="hint" data-i18n="popupShortcutsHelp"></p>
+
+  <h2 data-i18n="popupPip"></h2>
+  <p class="hint" data-i18n="popupPipHelp"></p>
+  <p class="hint" data-i18n="popupPipKeys"></p>
+
+  <script src="popup.js"></script>
+</body>
+</html>

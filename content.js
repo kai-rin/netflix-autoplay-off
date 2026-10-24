@@ -7,6 +7,15 @@
   const ROOT = document.documentElement;
   const WATCH_PATH_RE = /^\/watch\//;
 
+  // 設定キーとデフォルト値（popup.js と揃える）
+  const DEFAULTS = {
+    enabled: true,
+    skipIntro: true,
+    skipStillWatching: true,
+    nextEpisode: 'netflix',
+    shortcuts: true
+  };
+
   // --- 動画を停止 ---
   function stopVideo(video) {
     video.pause();
@@ -18,13 +27,26 @@
     return WATCH_PATH_RE.test(window.location.pathname);
   }
 
+  function onOff(value) {
+    return value ? 'on' : 'off';
+  }
+
   // --- 状態を DOM に反映 ---
-  // dataset.nao は inject.js (MAIN world) が参照するクロスワールドブリッジキー
+  // dataset.nao* は inject.js / player.js (MAIN world) が参照するクロスワールドブリッジキー
   function applyState(enabled) {
-    ROOT.dataset.nao = enabled ? 'on' : 'off';
+    ROOT.dataset.nao = onOff(enabled);
     if (enabled) {
       pauseAllVideos();
     }
+  }
+
+  function applySettings(settings) {
+    if (settings.enabled !== undefined) applyState(settings.enabled);
+    if (settings.skipIntro !== undefined) ROOT.dataset.naoSkipIntro = onOff(settings.skipIntro);
+    if (settings.skipStillWatching !== undefined) ROOT.dataset.naoStill = onOff(settings.skipStillWatching);
+    if (settings.nextEpisode !== undefined) ROOT.dataset.naoNext = settings.nextEpisode;
+    if (settings.shortcuts !== undefined) ROOT.dataset.naoKeys = onOff(settings.shortcuts);
+    if (settings.pipSize !== undefined) ROOT.dataset.naoPipSize = settings.pipSize;
   }
 
   // --- 全動画を停止（/watch/ ページ以外のみ） ---
@@ -34,17 +56,26 @@
   }
 
   // --- 初期状態を読み込み ---
-  chrome.storage.local.get('enabled', function (result) {
-    var enabled = result.enabled !== undefined ? result.enabled : true;
-    applyState(enabled);
+  chrome.storage.local.get(null, function (result) {
+    applySettings(Object.assign({}, DEFAULTS, result));
   });
 
   // --- リアルタイムトグル反映 ---
   chrome.storage.onChanged.addListener(function (changes, areaName) {
-    if (areaName === 'local' && changes.enabled !== undefined) {
-      // キー削除時は newValue が undefined → デフォルト（有効）に揃える
-      var newValue = changes.enabled.newValue;
-      applyState(newValue !== undefined ? newValue : true);
+    if (areaName !== 'local') return;
+    var settings = {};
+    Object.keys(changes).forEach(function (key) {
+      // キー削除時は newValue が undefined → デフォルトに揃える
+      var newValue = changes[key].newValue;
+      settings[key] = newValue !== undefined ? newValue : DEFAULTS[key];
+    });
+    applySettings(settings);
+  });
+
+  // --- PiP ウィンドウの大きさを保存（player.js から "幅x高さ" が届く） ---
+  document.addEventListener('nao-pip-size', function (event) {
+    if (typeof event.detail === 'string' && /^\d+x\d+$/.test(event.detail)) {
+      chrome.storage.local.set({ pipSize: event.detail });
     }
   });
 

@@ -1,8 +1,44 @@
 {
   "extDescription": {
-    "message": "Netflix の自動再生プレビューを無効化"
+    "message": "Netflix の自動再生プレビューを止め、字幕付き PiP・イントロ自動スキップ・速度変更などで視聴を快適にする"
   },
   "menuToggle": {
     "message": "自動再生をブロック"
+  },
+  "popupBlock": {
+    "message": "トップページの自動再生プレビューを止める"
+  },
+  "popupSkipIntro": {
+    "message": "イントロ・前回のあらすじを自動でスキップ"
+  },
+  "popupStillWatching": {
+    "message": "「視聴を続けますか？」を自動で閉じる"
+  },
+  "popupNextEpisode": {
+    "message": "エピソードの終わり"
+  },
+  "nextNetflix": {
+    "message": "Netflix の標準どおり"
+  },
+  "nextImmediate": {
+    "message": "エンドクレジットですぐ次のエピソードへ"
+  },
+  "nextStop": {
+    "message": "次のエピソードへ自動で進まない"
+  },
+  "popupShortcuts": {
+    "message": "再生画面の追加ショートカットを使う"
+  },
+  "popupShortcutsHelp": {
+    "message": "[ / ]: 速度 −/+0.25（0.25〜3倍）　\\: 標準速度　N: 次のエピソード"
+  },
+  "popupPip": {
+    "message": "PiP（小窓）"
+  },
+  "popupPipHelp": {
+    "message": "再生画面で Alt+P を押すと、字幕と操作バー付きの小窓で開きます。もう一度 Alt+P で元に戻ります。"
+  },
+  "popupPipKeys": {
+    "message": "小窓の中: Space 再生/停止　←/→ 10秒　↑/↓ 音量　M ミュート　C 黒帯を詰める　[ ] 速度　N 次のエピソード"
   }
 }
