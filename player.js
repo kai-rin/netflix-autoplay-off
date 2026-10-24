@@ -1,6 +1,6 @@
 // player.js -- MAIN world, document_start
-// /watch/ ページの再生補助: Document PiP（字幕・操作バー付き）、自動スキップ、
-// 次エピソード制御、ショートカット、再生速度
+// /watch/ ページの再生補助: Document PiP（字幕・操作バー付き）、ブラウザ標準 PiP の解禁、
+// 自動スキップ、次エピソード制御、ショートカット、再生速度
 // 設定は document.documentElement.dataset.nao* で判定（content.js が設定）
 
 (function () {
@@ -76,11 +76,12 @@
 
   // --- 動画と Netflix プレイヤー API ---
 
-  // メイン文書の動画（プレビューとの取り違えを避けて最大のもの）
+  // メイン文書の動画（プレイヤー内を優先し、プレビューとの取り違えを避けて最大のもの）
   function findMainVideo() {
+    const root = document.querySelector(SEL.playerRoot) || document;
     let best = null;
     let bestArea = -1;
-    document.querySelectorAll('video').forEach((v) => {
+    root.querySelectorAll('video').forEach((v) => {
       const area = v.clientWidth * v.clientHeight;
       if (area > bestArea) {
         best = v;
@@ -197,8 +198,43 @@
     }
   }
 
+  // --- ブラウザ標準の PiP ---
+
+  // Netflix が動画に付ける disablePictureInPicture を外し、ブラウザ標準の PiP ボタンを使えるようにする
+  function allowNativePip() {
+    document.querySelectorAll('video').forEach((v) => {
+      if (v.disablePictureInPicture) v.disablePictureInPicture = false;
+    });
+  }
+
+  // 標準 PiP の小窓に 10 秒送り戻し・次のエピソードのボタンを出す
+  // Netflix が後から上書きすることがあるため、定期的に登録し直す
+  function setMediaSessionHandlers() {
+    if (!('mediaSession' in navigator)) return;
+    const handlers = {
+      seekbackward: () => {
+        const v = currentVideo();
+        if (v) seekTo(v, v.currentTime - SEEK_STEP);
+      },
+      seekforward: () => {
+        const v = currentVideo();
+        if (v) seekTo(v, v.currentTime + SEEK_STEP);
+      },
+      nexttrack: () => goNextEpisode(activeDoc())
+    };
+    for (const [action, handler] of Object.entries(handlers)) {
+      try {
+        navigator.mediaSession.setActionHandler(action, handler);
+      } catch (e) {
+        // 未対応の action は無視する
+      }
+    }
+  }
+
   function runAutoActions() {
     if (!isWatchPage()) return;
+    allowNativePip();
+    setMediaSessionHandlers();
     if (flagOn('naoSkipIntro')) autoPress(SEL.skipIntro, T.skipped);
     if (flagOn('naoStill')) autoPress(SEL.stillWatching, T.continued);
     const mode = ROOT.dataset.naoNext || 'netflix';

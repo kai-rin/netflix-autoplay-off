@@ -410,8 +410,23 @@ const MOCK_WATCH_HTML = `<!doctype html>
     return URL.createObjectURL(new Blob([buf], { type: 'audio/wav' }));
   }
   const v = document.getElementById('v');
+  v.disablePictureInPicture = true; // Netflix blocks native PiP the same way
   v.src = silentWav(60);
+  // record media session handlers so the test can invoke them
+  window.__mediaSession = {};
+  navigator.mediaSession.setActionHandler = (action, handler) => { window.__mediaSession[action] = handler; };
   v.play().catch(() => {});
+  // A tiny second video with a real video track (the WAV one has none, and
+  // the browser refuses PiP for track-less media). Also PiP-blocked.
+  const canvas = document.createElement('canvas');
+  canvas.width = 16; canvas.height = 9;
+  canvas.getContext('2d').fillRect(0, 0, 16, 9);
+  const v2 = document.createElement('video');
+  v2.id = 'v2'; v2.muted = true; v2.width = 16; v2.height = 9;
+  v2.disablePictureInPicture = true;
+  v2.srcObject = canvas.captureStream(1);
+  document.body.append(v2);
+  v2.play().catch(() => {});
   window.__seeks = [];
   window.__clicks = [];
   const player = { seek: (ms) => window.__seeks.push(ms), play: () => v.play(), pause: () => v.pause() };
@@ -511,6 +526,24 @@ async function watchPageE2E(cdp, swSession, pollEval) {
   await cdp.eval(swSession, `chrome.storage.local.remove('shortcuts')`);
   await pollEval(page, `document.documentElement.dataset.naoKeys`, 'on', 5000);
 
+  // -- native (browser) Picture-in-Picture ----------------------------------
+  check('native pip: disablePictureInPicture is removed',
+    await pollEval(page, `[...document.querySelectorAll('video')].every((v) => !v.disablePictureInPicture)`, true, 3000));
+  const native = await cdp.send('Runtime.evaluate', {
+    expression: `document.getElementById('v2').requestPictureInPicture()
+      .then(() => document.pictureInPictureElement?.id)
+      .catch((e) => 'error:' + e.name)`,
+    awaitPromise: true, returnByValue: true, userGesture: true
+  }, page);
+  check('native pip: browser PiP opens', native.result.value === 'v2', native.result.value);
+  await cdp.eval(page, `document.pictureInPictureElement ? document.exitPictureInPicture().then(() => true) : true`);
+  check('native pip: media session handlers are registered',
+    await pollEval(page, `['seekbackward', 'seekforward', 'nexttrack'].every((a) => typeof window.__mediaSession[a] === 'function')`, true, 3000));
+  await cdp.eval(page, `window.__seeks = []; window.__mediaSession.seekforward(); window.__seeks.length === 1 && window.__seeks[0] >= 10000`);
+  check('native pip: seekforward handler seeks through the player API',
+    await pollEval(page, `window.__seeks.length === 1 && window.__seeks[0] >= 10000`, true, 2000));
+  await cdp.eval(page, `window.__seeks = []`);
+
   // -- Document Picture-in-Picture -----------------------------------------
   // Alt+P via CDP is a trusted key press, which grants the user activation
   // that documentPictureInPicture.requestWindow() requires.
@@ -520,7 +553,7 @@ async function watchPageE2E(cdp, swSession, pollEval) {
   check('pip: Alt+P opens a Document PiP window', opened);
   if (!opened) return;
 
-  check('pip: video moved out of the page', await pollEval(page, `document.querySelectorAll('video').length`, 0, 2000));
+  check('pip: video moved out of the page', await pollEval(page, `document.querySelector('[data-uia="player"] video')`, null, 2000));
   check('pip: video is inside the PiP window', await pollEval(page, `${PIP_DOC}.querySelector('video')?.id`, 'v', 2000));
   check('pip: subtitles are mirrored',
     await pollEval(page, `${PIP_DOC}.querySelector('.nao-caption').textContent.replace(/\\s+/g, ' ').trim()`, 'Hello World', 3000));

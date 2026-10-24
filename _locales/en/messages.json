@@ -36,7 +36,7 @@
     "message": "Picture-in-Picture"
   },
   "popupPipHelp": {
-    "message": "Press Alt+P on the player to open a floating window with subtitles and controls. Press Alt+P again to return."
+    "message": "Press Alt+P on the player to open a floating window with subtitles and controls. Press Alt+P again to return. Without subtitles, the browser's own PiP button also works (with ±10s and next episode)."
   },
   "popupPipKeys": {
     "message": "In the window: Space play/pause   ←/→ 10s   ↑/↓ volume   M mute   C fit to video   [ ] speed   N next episode"

@@ -21,7 +21,7 @@ Chrome / Edge / Opera / Brave / Vivaldi など、Chromium系ブラウザ（Chrom
 ### 機能
 
 - Netflixトップページのプレビュー動画の自動再生をブロック（バッジでON/OFFを表示）
-- **PiP（小窓）**: 再生画面で `Alt+P`。字幕・操作バー（再生/停止、10秒送り戻し、シークバー、音量、再生速度、次のエピソード）付きの小窓で再生。小窓の大きさを覚える
+- **PiP（小窓）**: 再生画面で `Alt+P`。字幕・操作バー（再生/停止、10秒送り戻し、シークバー、音量、再生速度、次のエピソード）付きの小窓で再生。小窓の大きさを覚える。字幕が要らなければブラウザ標準の PiP ボタンも使える（Netflix が付けている PiP 禁止を外す。小窓で10秒送り戻し・次のエピソードが使える）
 - **イントロ・前回のあらすじを自動スキップ**
 - **「視聴を続けますか？」を自動で閉じる**
 - **エピソードの終わり**: Netflix の標準どおり／エンドクレジットですぐ次へ／次へ自動で進まない
@@ -51,7 +51,7 @@ Chrome / Edge / Opera / Brave / Vivaldi など、Chromium系ブラウザ（Chrom
 
 `HTMLVideoElement.prototype.play()` をオーバーライドし、Netflixが動画を再生しようとする呼び出しをインターセプトします。さらに `MutationObserver` で動的に追加される動画要素も監視・停止します。`/watch/` ページ（実際の動画視聴ページ）ではブロックを行わないため、通常の視聴には影響しません。
 
-PiP は Document Picture-in-Picture API で小窓を開き、Netflix の動画要素をそのまま小窓へ移します（再エンコードしないので画質は元のまま）。字幕は Netflix の字幕表示を小窓の大きさで描き直し、シークは Netflix のプレイヤー API で行います。スキップ等は Netflix 自身のボタンを押す方式です。すべて Netflix のページ内で動き、外部への通信はしません。
+PiP は Document Picture-in-Picture API で小窓を開き、Netflix の動画要素をそのまま小窓へ移します（再エンコードしないので画質は元のまま）。字幕は Netflix の字幕表示を小窓の大きさで描き直し、シークは Netflix のプレイヤー API で行います。ブラウザ標準の PiP は、Netflix が動画に付けている `disablePictureInPicture` を外して使えるようにし、Media Session API で10秒送り戻しと次のエピソードを登録します（標準 PiP は映像だけを映すため字幕は出ません）。スキップ等は Netflix 自身のボタンを押す方式です。すべて Netflix のページ内で動き、外部への通信はしません。
 
 ### テスト
 
@@ -72,7 +72,7 @@ Works on Chromium-based browsers: Chrome / Edge / Opera / Brave / Vivaldi, etc. 
 ### Features
 
 - Blocks autoplay preview videos on the Netflix top page (ON/OFF shown on the badge)
-- **Picture-in-Picture**: press `Alt+P` on the player. A floating window with subtitles and controls (play/pause, ±10s, seek bar, volume, speed, next episode) that remembers its size
+- **Picture-in-Picture**: press `Alt+P` on the player. A floating window with subtitles and controls (play/pause, ±10s, seek bar, volume, speed, next episode) that remembers its size. Without subtitles, the browser's own PiP button also works (Netflix's PiP block is removed; ±10s and next episode in the PiP window)
 - **Auto skip intros and recaps**
 - **Auto dismiss "Are you still watching?"**
 - **At the end of an episode**: Netflix default / go to the next episode as soon as credits start / don't continue
@@ -102,7 +102,7 @@ Works on Chromium-based browsers: Chrome / Edge / Opera / Brave / Vivaldi, etc. 
 
 Overrides `HTMLVideoElement.prototype.play()` to intercept Netflix's video playback calls. A `MutationObserver` also watches for dynamically added video elements and pauses them. Blocking is skipped on `/watch/` pages so that normal video playback is unaffected.
 
-Picture-in-Picture opens a window with the Document Picture-in-Picture API and moves Netflix's own video element into it (no re-encoding, so quality is unchanged). Subtitles are redrawn at the window's size from Netflix's subtitle display, and seeking goes through Netflix's player API. Skipping works by pressing Netflix's own buttons. Everything runs inside the Netflix page; nothing is sent anywhere.
+Picture-in-Picture opens a window with the Document Picture-in-Picture API and moves Netflix's own video element into it (no re-encoding, so quality is unchanged). Subtitles are redrawn at the window's size from Netflix's subtitle display, and seeking goes through Netflix's player API. The browser's own PiP is enabled by removing the `disablePictureInPicture` flag Netflix sets, and ±10s / next episode are registered via the Media Session API (native PiP shows video frames only, so no subtitles). Skipping works by pressing Netflix's own buttons. Everything runs inside the Netflix page; nothing is sent anywhere.
 
 ### Testing
 

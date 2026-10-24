@@ -50,7 +50,12 @@ calls, or dependencies without the owner's explicit request.
 - PiP moves Netflix's own `<video>` (no capture/re-encode, so DRM and quality
   are kept) and restores it to its original parent on `pagehide`. Subtitles are
   mirrored, not moved, so Netflix's own subtitle layout is untouched.
-- PiP is opened only from an in-page `Alt+P` keydown: `requestWindow()` needs
+- Native browser PiP is enabled by clearing `disablePictureInPicture` on every
+  tick, and Media Session handlers (seekbackward/seekforward/nexttrack) are
+  re-registered every tick because Netflix may overwrite them. Native PiP
+  cannot show subtitles (DOM overlay; DRM frames can't be drawn to a canvas),
+  hence the Document PiP as well.
+- Document PiP is opened only from an in-page `Alt+P` keydown: `requestWindow()` needs
   user activation in the page, which a popup click or extension command does
   not provide.
 - Auto-pressed buttons are remembered in a WeakSet so a lingering countdown
