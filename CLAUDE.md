@@ -56,9 +56,12 @@ calls, or dependencies without the owner's explicit request.
   cannot show subtitles (DOM overlay; DRM frames can't be drawn to a canvas),
   hence the Document PiP as well.
 - Keys: `Alt+P` toggles native PiP, `Alt+Shift+P` toggles Document PiP.
-- Document PiP is opened only from an in-page `Alt+Shift+P` keydown: `requestWindow()` needs
-  user activation in the page, which a popup click or extension command does
-  not provide.
+- Both PiP kinds need user activation in the page. They open from in-page key
+  presses, or from the popup buttons: `popup.js` calls
+  `scripting.executeScript` (MAIN world) during the click, which runs with a
+  user gesture, and dispatches `nao-pip-request` to `player.js`. That is why
+  the extension has `activeTab` + `scripting`. A plain `tabs.sendMessage` does
+  not carry the gesture.
 - Auto-pressed buttons are remembered in a WeakSet so a lingering countdown
   button is never pressed twice (double next-episode skips).
 

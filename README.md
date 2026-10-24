@@ -26,7 +26,7 @@ Chrome / Edge / Opera / Brave / Vivaldi など、Chromium系ブラウザ（Chrom
 - **「視聴を続けますか？」を自動で閉じる**
 - **エピソードの終わり**: Netflix の標準どおり／エンドクレジットですぐ次へ／次へ自動で進まない
 - **再生速度とショートカット**: `[` `]` で 0.25〜3 倍、`\` で標準速度、`N` で次のエピソード
-- 各機能は拡張アイコンのポップアップでON/OFF
+- 拡張アイコンのポップアップ: 一番上の「PiP で見る」「字幕付きの小窓で見る」ボタンで小窓を開く。各機能のON/OFFもここで切り替え
 - 日本語 / 英語の表示に対応
 
 ### インストール
@@ -42,7 +42,7 @@ Chrome / Edge / Opera / Brave / Vivaldi など、Chromium系ブラウザ（Chrom
 ### 使い方
 
 - インストール後、Netflixを開くと自動的にプレビュー動画がブロックされます
-- 拡張アイコンをクリックすると設定のポップアップが開きます（自動再生ブロックは右クリック →「自動再生をブロック」でも切り替え可）
+- 拡張アイコンをクリックするとポップアップが開きます。再生画面なら一番上のボタン（Enter でも可）で PiP を開けます（自動再生ブロックは右クリック →「自動再生をブロック」でも切り替え可）
 - ON（緑バッジ）: ブロック有効 / OFF（灰バッジ）: ブロック無効
 - 再生画面で `Alt+P` を押すとブラウザ標準の PiP、`Alt+Shift+P` を押すと字幕付きの小窓で開き、同じキーをもう一度押すと元に戻ります
 - 小窓の中のキー: `Space` 再生/停止、`←` `→` 10秒、`↑` `↓` 音量、`M` ミュート、`C` 黒帯を詰める、`[` `]` 速度、`N` 次のエピソード
@@ -77,7 +77,7 @@ Works on Chromium-based browsers: Chrome / Edge / Opera / Brave / Vivaldi, etc. 
 - **Auto dismiss "Are you still watching?"**
 - **At the end of an episode**: Netflix default / go to the next episode as soon as credits start / don't continue
 - **Speed and shortcuts**: `[` `]` for 0.25–3x, `\` for normal speed, `N` for the next episode
-- Every feature can be switched on/off from the extension popup
+- Extension popup: "Picture-in-Picture" / "Floating window with subtitles" buttons at the top, plus on/off switches for every feature
 - Localized UI (Japanese / English)
 
 ### Installation
@@ -93,7 +93,7 @@ Works on Chromium-based browsers: Chrome / Edge / Opera / Brave / Vivaldi, etc. 
 ### Usage
 
 - After installation, preview videos on Netflix are automatically blocked
-- Click the extension icon to open the settings popup (autoplay blocking can also be toggled via right-click → "Block autoplay")
+- Click the extension icon to open the popup. On the player, the top button (or Enter) opens PiP (autoplay blocking can also be toggled via right-click → "Block autoplay")
 - ON (green badge): blocking enabled / OFF (gray badge): blocking disabled
 - On the player, `Alt+P` opens the browser's own PiP and `Alt+Shift+P` opens the floating window with subtitles; press the same keys again to return
 - Keys in the window: `Space` play/pause, `←` `→` 10s, `↑` `↓` volume, `M` mute, `C` fit to video, `[` `]` speed, `N` next episode
